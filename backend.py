@@ -15,9 +15,11 @@ from networkx.readwrite import json_graph
 from lib import graph, nodes
 from lib.alfred import Alfred
 from lib.batman import Batman
+from lib.unifi import Unifi
 from lib.rrddb import RRD
 from lib.nodelist import export_nodelist
 from lib.validate import validate_nodeinfos
+from pprint import pprint
 
 NODES_VERSION = 1
 GRAPH_VERSION = 1
@@ -56,6 +58,16 @@ def main(params):
                     'Unparseable value "{0}" in --mesh parameter.'.
                     format(value))
 
+    # Instantiate unifi instances.
+    unifi_instances = []
+    for value in params['unifi']:
+        try:
+            unifi_instances.append(Unifi(*value.split(":")))
+        except:
+            raise ValueError(
+                'Failed to update parameters for Unifi API.'
+                )
+
     # read nodedb state from node.json
     try:
         with open(nodes_fn, 'r') as nodedb_handle:
@@ -81,6 +93,12 @@ def main(params):
         nodes.import_nodeinfo(nodedb['nodes'], nodeinfo,
                               now, assume_online=True)
 
+    # Integrate unifi nodeinfo
+    for unifi in unifi_instances:
+        nodeinfo = validate_nodeinfos(unifi.nodeinfo(params['vpn'][0]))
+        nodes.import_nodeinfo(nodedb['nodes'], nodeinfo,
+                              now, assume_online=True)
+
     # integrate static aliases data
     for aliases in params['aliases']:
         with open(aliases, 'r') as f:
@@ -91,6 +109,8 @@ def main(params):
     nodes.reset_statistics(nodedb['nodes'])
     for alfred in alfred_instances:
         nodes.import_statistics(nodedb['nodes'], alfred.statistics())
+    for unifi in unifi_instances:
+        nodes.import_statistics(nodedb['nodes'], unifi.statistics())
 
     # acquire gwl and visdata for each batman instance
     mesh_info = []
@@ -174,6 +194,9 @@ if __name__ == '__main__':
                         required=True)
     parser.add_argument('-V', '--vpn', nargs='+', metavar='MAC',
                         help='Assume MAC addresses are part of vpn')
+    parser.add_argument('-U', '--unifi', nargs='+', default=[],
+                        help='Unifi controllers to query for node info,'
+                             ' pass info as host:user:pwd:port:ver')
     parser.add_argument('-p', '--prune', metavar='DAYS', type=int,
                         help='forget nodes offline for at least DAYS')
     parser.add_argument('--with-rrd', dest='rrd', action='store_true',
