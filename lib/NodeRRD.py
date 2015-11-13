@@ -6,18 +6,16 @@ from lib.RRD import DS, RRA, RRD
 
 class NodeRRD(RRD):
     ds_list = [
-        DS('upstate', 'GAUGE', 120, 0, 1),
-        DS('clients', 'GAUGE', 120, 0, float('NaN')),
+        DS('upstate', 'GAUGE', 1800, 0, 1),
+        DS('clients', 'GAUGE', 1800, 0, float('NaN')),
     ]
     rra_list = [
-        # 2 hours of  1 minute samples
-        RRA('AVERAGE', 0.5, 1, 120),
-        #  5 days  of  5 minute samples
-        RRA('AVERAGE', 0.5, 5, 1440),
-        # 30 days  of  1 hour   samples
-        RRA('AVERAGE', 0.5, 60, 720),
-        #  1 year  of 12 hour   samples
-        RRA('AVERAGE', 0.5, 720, 730),
+        # 12 hours of  10 minute samples
+        RRA('AVERAGE', 0.5, 1, 72),
+        # 31 days  of  2 hour   samples
+        RRA('AVERAGE', 0.5, 12, 372),
+        # ~5 year  of  1 day   samples
+        RRA('AVERAGE', 0.5, 144, 1860),
     ]
 
     def __init__(self, filename, node=None):
@@ -28,7 +26,7 @@ class NodeRRD(RRD):
         """
         self.node = node
         super().__init__(filename)
-        self.ensure_sanity(self.ds_list, self.rra_list, step=60)
+        self.ensure_sanity(self.ds_list, self.rra_list, step=600)
 
     @property
     def imagename(self):
@@ -45,7 +43,7 @@ class NodeRRD(RRD):
         Create a graph in the given directory. The file will be named
         basename.png if the RRD file is named basename.rrd
         """
-        args = ['rrdtool', 'graph', os.path.join(directory, self.imagename),
+        args = ['/usr/bin/rrdtool', 'graph', os.path.join(directory, self.imagename),
                 '-s', '-' + timeframe,
                 '-w', '800',
                 '-h', '400',

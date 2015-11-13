@@ -50,7 +50,7 @@ class RRD(object):
     _cached_info = None
 
     def _exec_rrdtool(self, cmd, *args, **kwargs):
-        pargs = ["rrdtool", cmd, self.filename]
+        pargs = ["/usr/bin/rrdtool", cmd, self.filename]
         for k, v in kwargs.items():
             pargs.extend(["--" + k, str(v)])
         pargs.extend(args)
@@ -122,11 +122,11 @@ class RRD(object):
         added_ds_num = len(new_ds) - len(info['ds'])
 
         dump = subprocess.Popen(
-            ["rrdtool", "dump", self.filename],
+            ["/usr/bin/rrdtool", "dump", self.filename],
             stdout=subprocess.PIPE)
 
         restore = subprocess.Popen(
-            ["rrdtool", "restore", "-", self.filename + ".new"],
+            ["/usr/bin/rrdtool", "restore", "-", self.filename + ".new"],
             stdin=subprocess.PIPE)
         echo = True
         ds_definitions = True
@@ -231,7 +231,7 @@ class RRD(object):
         env = os.environ.copy()
         env["LC_ALL"] = "C"
         proc = subprocess.Popen(
-            ["rrdtool", "info", self.filename],
+            ["/usr/bin/rrdtool", "info", self.filename],
             stdout=subprocess.PIPE,
             env=env
         )
