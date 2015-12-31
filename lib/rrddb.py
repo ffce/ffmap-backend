@@ -30,11 +30,13 @@ class RRD(object):
     def update_database(self, nodes):
         online_nodes = dict(filter(
             lambda d: d[1]['flags']['online'], nodes.items()))
+        client_visible_nodes = dict(filter(
+            lambda d: d[1]['statistics']['clients'] >= 0, online_nodes.items()))
         client_count = sum(map(
-            lambda d: d['statistics']['clients'], online_nodes.values()))
+            lambda d: d['statistics']['clients'], client_visible_nodes.values()))
 
         self.globalDb.update(len(online_nodes), client_count)
-        for node_id, node in online_nodes.items():
+        for node_id, node in client_visible_nodes.items():
             rrd = NodeRRD(os.path.join(self.dbPath, node_id + '.rrd'), node)
             rrd.update()
 

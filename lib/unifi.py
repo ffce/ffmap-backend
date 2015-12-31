@@ -75,7 +75,7 @@ class Unifi:
                           'system': {'site_code': 'ffce'}})
 
             # Create stats.
-            self._stats.append({'clients': {'total': node['num_sta'], 'wifi': node['num_sta']},
+            self._stats.append({'clients': {'total': -1, 'wifi': -1},
                                 'node_id': nodeid,
                                 'gateway': gw,
                                 'uptime': node['uptime'],
