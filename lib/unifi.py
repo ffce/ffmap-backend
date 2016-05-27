@@ -60,6 +60,9 @@ class Unifi:
         # Walk the nodes.
         nodes = []
         for node in self._controller.get_aps():
+            if 'uptime' not in node:
+                continue
+
             # Create nodes.
             nodeid = sub('[^a-fA-F0-9]+', '', node['mac'])
             nodes.append({'hardware': {'model': 'Unifi {0}'.format(MODELS.get(node['model'], 'unknown')),
@@ -79,10 +82,10 @@ class Unifi:
                                 'node_id': nodeid,
                                 'gateway': gw,
                                 'uptime': node['uptime'],
-                                'traffic': {'rx': {'bytes': node['stat']['rx_bytes'],
-                                                   'packets': node['stat']['rx_packets']},
-                                            'tx': {'bytes': node['stat']['tx_bytes'],
-                                                   'packets': node['stat']['tx_bytes']}}})
+                                'traffic': {'rx': {'bytes': node['stat'].get('rx_bytes', 0),
+                                                   'packets': node['stat'].get('rx_packets', 0)},
+                                            'tx': {'bytes': node['stat'].get('tx_bytes', 0),
+                                                   'packets': node['stat'].get('tx_bytes', 0)}}})
 
         # Return node list.
         return nodes
